@@ -18,8 +18,8 @@ class Auth0OAuth2(BaseOAuth2):
     DEFAULT_SCOPE=["email", "profile", "openid"]
     ACCESS_TOKEN_METHOD = "POST"
     EXTRA_DATA = [("picture", "picture")]
-    DOMAIN="litvak.auth0.com"
-    AUDIENCE="https://litvak.auth0.com/userinfo"
+    DOMAIN="auth.yam-edu.com"
+    AUDIENCE="https://auth.yam-edu.com/userinfo"
 
     def api_path(self, path=""):
         """Build API path for Auth0 domain"""

@@ -19,7 +19,7 @@ class Auth0OAuth2(BaseOAuth2):
     ACCESS_TOKEN_METHOD = "POST"
     EXTRA_DATA = [("picture", "picture")]
     DOMAIN="auth.yam-edu.com"
-    AUDIENCE="https://auth.yam-edu.com/userinfo"
+    AUDIENCE="https://api.yam-edu.com"
 
     def api_path(self, path=""):
         """Build API path for Auth0 domain"""

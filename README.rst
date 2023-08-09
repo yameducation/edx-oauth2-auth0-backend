@@ -34,5 +34,5 @@ Your private.txt should looke like this at the end:
   THIRD_PARTY_AUTH_BACKENDS:
   - "auth0_oauth2.auth0.Auth0OAuth2"
   ENABLE_REQUIRE_THIRD_PARTY_AUTH: true
-
-
+  SOCIAL_AUTH_AUTH0_PLUGIN_FIELDS_STORED_IN_SESSION:
+  - "auth_entry"

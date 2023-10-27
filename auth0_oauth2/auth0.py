@@ -76,3 +76,15 @@ class Auth0OAuth2(BaseOAuth2):
             return {
                 "user_id": payload["sub"]
             }
+
+    def auth_extra_arguments(self):
+        extra_arguments = super().auth_extra_arguments()
+
+        # Open edX passes auth_entry query parameter which signifies if it was a login or a registration page
+        auth_entry = self.strategy.session_get("auth_entry", default=None)
+        if auth_entry == "register":
+            # Auth0 accepts screen_hint=signup on /authorize endpoint to redirect to sign up page
+            # https://auth0.com/docs/authenticate/login/auth0-universal-login/new-experience#signup
+            extra_arguments["screen_hint"] = "signup"
+
+        return extra_arguments

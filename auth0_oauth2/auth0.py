@@ -5,9 +5,9 @@ https://auth0.com/docs/quickstart/webapp/django/01-login
 from jose import jwt
 import json
 from logging import getLogger
-
+import logging
 from social_core.backends.oauth import BaseOAuth2
-
+from django.conf import settings
 logger = getLogger(__name__)
 
 class Auth0OAuth2(BaseOAuth2):
@@ -18,8 +18,12 @@ class Auth0OAuth2(BaseOAuth2):
     DEFAULT_SCOPE=["email", "profile", "openid"]
     ACCESS_TOKEN_METHOD = "POST"
     EXTRA_DATA = [("picture", "picture")]
-    DOMAIN="auth.yam-edu.com"
-    AUDIENCE="https://api.yam-edu.com"
+    #DOMAIN="auth.yam-edu.com"
+    #AUDIENCE="https://api.yam-edu.com"
+
+    DOMAIN = getattr(settings, "SOCIAL_AUTH_AUTH0_DOMAIN", "auth.yam-edu.com")
+    AUDIENCE = getattr(settings, "SOCIAL_AUTH_AUTH0_AUDIENCE", "https://api.yam-edu.com")
+
 
     def api_path(self, path=""):
         """Build API path for Auth0 domain"""
@@ -40,28 +44,31 @@ class Auth0OAuth2(BaseOAuth2):
     def get_user_details(self, response):
         # Obtain JWT and the keys to validate the signature
         logger.warning("Response: {resp}".format(resp=json.dumps(response, sort_keys=True, indent=4)))
-        
         is_auth_exchange = False
 
-        id_token = response.get("id_token")  
-        audience = self.setting("KEY")   
+
+        logging.info(f"DOMAIN: {self.setting('DOMAIN')}")
+        logging.info(f"AUDIENCE: {self.setting('AUDIENCE')}")
+        logging.info(f"KEY: {self.setting('KEY')}")
+        logging.info(f"SECRET: {self.setting('SECRET')}")
+
+        id_token = response.get("id_token")
+        audience = self.setting("KEY")
         jwks = self.get_json(self.api_path(".well-known/jwks.json"))
         issuer = self.api_path()
-
         #if handling an auth_exchange
         if id_token is None: # handling for auth_exchange which doesn't send an id_token
             id_token = response.get("access_token") # attempt to use the access token in this case  
-            audience = self.AUDIENCE # match the audience in the access token
+            #audience = self.AUDIENCE # match the audience in the access token
+            audience = self.setting("AUDIENCE")  # same as normal case
             is_auth_exchange = True
-
+        logging.info(f'AUDIENCE FOR JWT TOKEN: {audience}')
         payload = jwt.decode(
             id_token, jwks, algorithms=["RS256"], audience=audience, issuer=issuer
         )
-
-        logger.warning("Payload: {val}".format(val=json.dumps(payload, sort_keys=True, indent=4)))
         if not is_auth_exchange:
             fullname, first_name, last_name = self.get_user_names(payload["name"])
-            return {
+            response = {
                 "username": payload["nickname"],
                 "email": payload["email"],
                 "email_verified": payload.get("email_verified", False),
@@ -71,6 +78,7 @@ class Auth0OAuth2(BaseOAuth2):
                 "picture": payload["picture"],
                 "user_id": payload["sub"],
             }
+            return response
         else:
             # when using an access token, we only have the user_id. We do not have all the other information.
             return {
